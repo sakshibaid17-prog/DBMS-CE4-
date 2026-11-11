@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="Deep_Sea_Research.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="3"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="1754"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><table title="deep_sea_dives" custom_title="0" dock_id="1" table="4,14:maindeep_sea_dives"/><dock_state state="000000ff00000000fd00000001000000020000043c000002b6fc0100000001fb000000160064006f0063006b00420072006f007700730065003101000000000000043c0000011800ffffff000002580000000000000004000000040000000800000008fc00000000"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="deep_sea_dives" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="49"/><column index="2" value="62"/><column index="3" value="96"/><column index="4" value="63"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="research_vessels" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="60"/><column index="2" value="148"/><column index="3" value="226"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="sample_analyses" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="70"/><column index="2" value="51"/><column index="3" value="124"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="sqlite_sequence" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="132"/><column index="2" value="29"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table></browse_table_settings></tab_browse><tab_sql><sql name="SQL 1*">-- ==========================================
+-- PROJECT: DEEP-SEA RESEARCH DATABASE
+-- ==========================================
+
+-- Enable Foreign Key Constraints
+PRAGMA foreign_keys = ON;
+
+
+-- ==========================================
+-- 1. RESEARCH VESSELS TABLE
+-- ==========================================
+
+CREATE TABLE IF NOT EXISTS research_vessels (
+    vessel_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    vessel_name TEXT NOT NULL UNIQUE COLLATE NOCASE,
+    chief_scientist_email TEXT NOT NULL
+);
+
+
+-- ==========================================
+-- 2. DEEP-SEA DIVES TABLE
+-- ==========================================
+
+CREATE TABLE IF NOT EXISTS deep_sea_dives (
+    dive_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    vessel_id INTEGER NOT NULL,
+    dive_site_name TEXT NOT NULL,
+    dive_date TEXT NOT NULL,
+
+    FOREIGN KEY (vessel_id)
+        REFERENCES research_vessels(vessel_id)
+        ON DELETE CASCADE
+);
+
+
+-- ==========================================
+-- 3. SAMPLE ANALYSES TABLE
+-- ==========================================
+
+CREATE TABLE IF NOT EXISTS sample_analyses (
+    analysis_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    dive_id INTEGER NOT NULL,
+    analysis_type TEXT NOT NULL,
+    measured_value REAL NOT NULL
+        CHECK(measured_value &gt;= 0),
+
+    FOREIGN KEY (dive_id)
+        REFERENCES deep_sea_dives(dive_id)
+        ON DELETE CASCADE
+);</sql><sql name="SQL 2*">-- ==========================================
+-- INSERT SAMPLE RECORDS
+-- ==========================================
+
+-- Insert Research Vessels
+INSERT INTO research_vessels
+(vessel_name, chief_scientist_email)
+VALUES
+('RV Ocean Explorer', 'captain@oceanexplorer.org'),
+('RV Deep Discoverer', 'scientist@deepdiscoverer.org'),
+('RV Nautilus', 'research@nautilus.org'),
+('RV Atlantis', 'team@atlantis.org'),
+('RV Challenger', 'marine@challenger.org');
+
+
+-- Insert Deep-Sea Dives
+INSERT INTO deep_sea_dives
+(vessel_id, dive_site_name, dive_date)
+VALUES
+(1, 'Mariana Trench - Challenger Deep', '2026-10-20'),
+(1, 'Pacific Ocean - Horizon Deep', '2026-10-22'),
+(2, 'Puerto Rico Trench', '2026-10-23'),
+(3, 'Indian Ocean - Java Trench', '2026-10-24'),
+(4, 'South Sandwich Trench', '2026-10-25'),
+(5, 'Mariana Trench - Sirena Deep', '2026-10-26');
+
+
+-- Insert Sample Analyses
+INSERT INTO sample_analyses
+(dive_id, analysis_type, measured_value)
+VALUES
+(1, 'Depth (m)', 10984),
+(1, 'Temperature (C)', 1.8),
+(1, 'Species Count', 25),
+(2, 'Depth (m)', 10823),
+(2, 'Temperature (C)', 2.1),
+(3, 'Depth (m)', 8376),
+(3, 'Species Count', 18),
+(4, 'Temperature (C)', 3.2),
+(5, 'Depth (m)', 7235),
+(6, 'Species Count', 32);</sql><sql name="SQL 3*">-- ==========================================
+-- PROJECT: DEEP-SEA RESEARCH DATABASE
+-- DISPLAY RECORDS
+-- ==========================================
+
+
+-- 1. Display Research Vessels
+SELECT *
+FROM research_vessels;
+
+
+-- 2. Display Deep-Sea Dives
+SELECT *
+FROM deep_sea_dives;
+
+
+-- 3. Display Sample Analyses
+SELECT *
+FROM sample_analyses;
+
+
+-- ==========================================
+-- 4. COMBINED DEEP-SEA RESEARCH MANIFEST
+-- ==========================================
+
+SELECT
+    d.dive_id,
+    r.vessel_name,
+    r.chief_scientist_email,
+    d.dive_site_name,
+    d.dive_date,
+    s.analysis_id,
+    s.analysis_type,
+    s.measured_value
+
+FROM research_vessels r
+
+INNER JOIN deep_sea_dives d
+    ON r.vessel_id = d.vessel_id
+
+INNER JOIN sample_analyses s
+    ON d.dive_id = s.dive_id
+
+ORDER BY d.dive_id;
+
+
+-- ==========================================
+-- 5. COUNT RECORDS IN EACH TABLE
+-- ==========================================
+
+SELECT COUNT(*) AS total_vessels
+FROM research_vessels;
+
+SELECT COUNT(*) AS total_dives
+FROM deep_sea_dives;
+
+SELECT COUNT(*) AS total_analyses
+FROM sample_analyses;</sql><sql name="SQL 4*">-- ==========================================
+-- PROJECT: DEEP-SEA RESEARCH DATABASE
+-- CASCADE DELETE TEST
+-- ==========================================
+
+-- Enable Foreign Key Constraints
+PRAGMA foreign_keys = ON;
+
+
+-- 1. Display records before deletion
+
+SELECT * FROM research_vessels;
+
+SELECT * FROM deep_sea_dives;
+
+SELECT * FROM sample_analyses;
+
+
+-- 2. Delete Research Vessel
+-- Vessel ID 1 = RV Ocean Explorer
+
+DELETE FROM research_vessels
+WHERE vessel_id = 1;
+
+
+-- 3. Display remaining Research Vessels
+
+SELECT * FROM research_vessels;
+
+
+-- 4. Display remaining Deep-Sea Dives
+
+SELECT * FROM deep_sea_dives;
+
+
+-- 5. Display remaining Sample Analyses
+
+SELECT * FROM sample_analyses;
+
+
+-- 6. Verify remaining record counts
+
+SELECT COUNT(*) AS remaining_vessels
+FROM research_vessels;
+
+SELECT COUNT(*) AS remaining_dives
+FROM deep_sea_dives;
+
+SELECT COUNT(*) AS remaining_analyses
+FROM sample_analyses;</sql><sql name="SQL 5*">-- ==========================================
+-- PROJECT: DEEP-SEA RESEARCH DATABASE
+-- INDIVIDUAL SAMPLE ANALYSIS DELETION
+-- ==========================================
+
+-- 1. Display analyses before deletion
+
+SELECT *
+FROM sample_analyses;
+
+
+-- 2. Delete one sample analysis
+-- Analysis ID 1 = Depth (m)
+
+DELETE FROM sample_analyses
+WHERE analysis_id = 1;
+
+
+-- 3. Display remaining sample analyses
+
+SELECT *
+FROM sample_analyses;
+
+
+-- 4. Verify parent dive still exists
+
+SELECT *
+FROM deep_sea_dives
+WHERE dive_id = 1;
+
+
+-- 5. Verify parent research vessel still exists
+
+SELECT *
+FROM research_vessels
+WHERE vessel_id = 1;
+
+
+-- 6. Display remaining analysis count
+
+SELECT COUNT(*) AS remaining_analyses
+FROM sample_analyses;</sql><current_tab id="4"/></tab_sql></sqlb_project>
